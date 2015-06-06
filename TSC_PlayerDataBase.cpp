@@ -13,7 +13,9 @@
 using namespace std;
 
 string processInput(string input);
-sqlite3_stmt * queryDaabase(string query);
+sqlite3_stmt * queryDatabase(string query);
+string getUIDFromInputMessage(string input);
+string executeSetterQueryString(string query);
 
 struct Data
 {
@@ -57,7 +59,7 @@ void worker()
 
 
 string executeGetterQueryInt(string query){
-	sqlite3_stmt *res = queryDaabase(query);
+	sqlite3_stmt *res = queryDatabase(query);
 	int result = 0;
 	while (sqlite3_step(res) == SQLITE_ROW){
 		result = (sqlite3_column_int(res, 0));
@@ -67,7 +69,7 @@ string executeGetterQueryInt(string query){
 }
 
 string executeGetterQueryString(string query){
-	sqlite3_stmt *res = queryDaabase(query);
+	sqlite3_stmt *res = queryDatabase(query);
 	string result = "";
 	while (sqlite3_step(res) == SQLITE_ROW){
 		result = std::string(reinterpret_cast<const char*>(sqlite3_column_text(res, 0)));
@@ -76,10 +78,10 @@ string executeGetterQueryString(string query){
 	return result;
 }
 
-sqlite3_stmt * queryDaabase(string query) {
+sqlite3_stmt * queryDatabase(string query) {
 	sqlite3_stmt *res;
 	int rec_count = 0;
-	const char *errMSG;
+	//const char *errMSG;
 	const char *tail;
 
 	int error = sqlite3_open("tsc_database.db", &dataBase);
@@ -96,9 +98,35 @@ sqlite3_stmt * queryDaabase(string query) {
 	{
 		//
 	}
-
 	return res;
 }
+
+
+
+string executeSetterQueryString(string query){
+	sqlite3_stmt *res;
+	int rec_count = 0;
+	//const char *errMSG;
+	const char *tail;
+
+	int error = sqlite3_open("tsc_database.db", &dataBase);
+	if (error)
+	{
+		return "fail to open db";
+	}
+	error = sqlite3_exec(dataBase,
+		query.c_str(),
+		0, 0, 0);
+
+	return "success";
+}
+
+
+string addSingleQuotes(string s) {
+	s.insert(0, "'");
+	s.append("'");
+	return s;
+};
 
 string getPlayerMoney(string playerUID) {
 	string query = "SELECT Money FROM Players WHERE Uid=" + playerUID;
@@ -166,8 +194,94 @@ string getPlayerBackpackItems(string playerUID) {
 	return output;
 }
 
-bool isPlayerInDatabase(string playerUID) {
+string getPlayerHandgun(string playerUID) {
+	string query = "SELECT Handgun FROM Players WHERE Uid=" + playerUID;
+	string output = executeGetterQueryString(query);
+	return output;
+}
 
+
+string setPlayerMoney(string input) {
+	string UID = getUIDFromInputMessage(input);
+	int moneyIndex = input.find(",") + 1;
+	string money = input.substr(moneyIndex);
+	string query = "UPDATE Players SET Money=" + money + " WHERE Uid=" + UID;
+	string output = executeSetterQueryString(query);
+	return output;
+}
+
+string setPlayerUniform(string input){
+	string UID = getUIDFromInputMessage(input);
+	int uniformIndex = input.find(",") + 1;
+	string uniform = input.substr(uniformIndex);
+	string query = "UPDATE Players SET Uniform=" + addSingleQuotes(uniform) + " WHERE Uid=" + UID;
+	string output = executeSetterQueryString(query);
+	return output;
+}
+
+string setPlayerVest(string input){
+	string UID = getUIDFromInputMessage(input);
+	int vestIndex = input.find(",") + 1;
+	string vest = input.substr(vestIndex);
+	string query = "UPDATE Players SET Vest=" + addSingleQuotes(vest) + " WHERE Uid=" + UID;
+	string output = executeSetterQueryString(query);
+	return output;
+}
+
+string setPlayerBackpack(string input){
+	string UID = getUIDFromInputMessage(input);
+	int backpackIndex = input.find(",") + 1;
+	string backpack = input.substr(backpackIndex);
+	string query = "UPDATE Players SET Backpack=" + addSingleQuotes(backpack) + " WHERE Uid=" + UID;
+	string output = executeSetterQueryString(query);
+	return output;
+}
+
+string setPlayerHeadgear(string input){
+	string UID = getUIDFromInputMessage(input);
+	int headgearIndex = input.find(",") + 1;
+	string headgear = input.substr(headgearIndex);
+	string query = "UPDATE Players SET Headgear=" + addSingleQuotes(headgear) + " WHERE Uid=" + UID;
+	string output = executeSetterQueryString(query);
+	return output;
+}
+
+string setPlayerPrimaryWeapon(string input){
+	string UID = getUIDFromInputMessage(input);
+	int primaryWeaponIndex = input.find(",") + 1;
+	string primaryWeapon = input.substr(primaryWeaponIndex);
+	string query = "UPDATE Players SET PrimaryWeapon=" + addSingleQuotes(primaryWeapon) + " WHERE Uid=" + UID;
+	string output = executeSetterQueryString(query);
+	return output;
+}
+
+string setPlayerSecondaryWeapon(string input){
+	string UID = getUIDFromInputMessage(input);
+	int secondaryWeaponIndex = input.find(",") + 1;
+	string secondaryWeapon = input.substr(secondaryWeaponIndex);
+	string query = "UPDATE Players SET SecondaryWeapon=" + addSingleQuotes(secondaryWeapon) + " WHERE Uid=" + UID;
+	string output = executeSetterQueryString(query);
+	return output;
+}
+
+string setPlayerHandgun(string input){
+	string UID = getUIDFromInputMessage(input);
+	int handgunIndex = input.find(",") + 1;
+	string handgun = input.substr(handgunIndex);
+	string query = "UPDATE Players SET Handgun=" + addSingleQuotes(handgun) + " WHERE Uid=" + UID;
+	string output = executeSetterQueryString(query);
+	return output;
+}
+
+//Must be scrubbed of the command (s:A, r:B, etc . . .)
+string getUIDFromInputMessage(string input) {
+	int index = input.find(",");
+	return input.substr(0, index);
+}
+
+
+bool isPlayerInDatabase(string playerUID) {
+	string query = "SELECT TOP 1 Uid FROM Players WHERE Uid =" + playerUID;
 }
 
 string processInput(string input) {
@@ -207,6 +321,30 @@ string processInput(string input) {
 	}
 	else if (!command.compare("K")) {
 		output = getPlayerBackpackItems(inputClean);
+	}
+	else if (!command.compare("L")) {
+		output = setPlayerMoney(inputClean);
+	}
+	else if (!command.compare("M")) {
+		output = setPlayerUniform(inputClean);
+	}
+	else if (!command.compare("N")) {
+		output = setPlayerVest(inputClean);
+	}
+	else if (!command.compare("P")) {
+		output = setPlayerHeadgear(inputClean);
+	}
+	else if (!command.compare("Q")) {
+		output = setPlayerBackpack(inputClean);
+	}
+	else if (!command.compare("R")) {
+		output = setPlayerPrimaryWeapon(inputClean);
+	}
+	else if (!command.compare("S")) {
+		output = setPlayerSecondaryWeapon(inputClean);
+	}
+	else if (!command.compare("T")) {
+		output = setPlayerHandgun(inputClean);
 	}
 
 	return output;
