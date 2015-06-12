@@ -283,7 +283,12 @@ string getUIDFromInputMessage(string input) {
 bool isPlayerInDatabase(string playerUID) {
 	string query = "SELECT TOP 1 Uid FROM Players WHERE Uid =" + playerUID;
 	string result = executeGetterQueryString(query);
-	//finish
+	if (!result.compare("")) {
+		return false;
+	}
+	else {
+		return true;
+	}
 }
 
 string processInput(string input) {
