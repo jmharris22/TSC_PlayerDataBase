@@ -340,6 +340,12 @@ string processInput(string input) {
 	}
 	else if (!command.compare("O")) {
 		//IsPlayerInDatabase
+		if (isPlayerInDatabase(inputClean)){
+			output = "YES";
+		}
+		else {
+			output = "NO";
+		}
 		
 	}
 	else if (!command.compare("P")) {
