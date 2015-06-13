@@ -338,6 +338,10 @@ string processInput(string input) {
 	else if (!command.compare("N")) {
 		output = setPlayerVest(inputClean);
 	}
+	else if (!command.compare("O")) {
+		//IsPlayerInDatabase
+		
+	}
 	else if (!command.compare("P")) {
 		output = setPlayerHeadgear(inputClean);
 	}
